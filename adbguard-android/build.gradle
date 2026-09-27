@@ -1,0 +1,8 @@
+// 顶层构建脚本
+// 只声明插件版本，不在这里应用；具体配置在 app/build.gradle
+//
+// 版本组合说明（对齐本机 Ren'Py 的 Android 工具链，已验证可用）：
+//   AGP 8.13.0  +  Gradle 9.1.0  +  JDK 21  +  SDK Platform 36
+plugins {
+    id 'com.android.application' version '8.13.0' apply false
+}

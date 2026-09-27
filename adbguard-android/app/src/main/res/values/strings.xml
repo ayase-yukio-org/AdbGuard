@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">守护喵</string>
+    <string name="a11y_label">守护喵 · 页面监测</string>
+    <string name="a11y_summary">监测可疑弹窗页面并拦截音量键</string>
+    <string name="a11y_desc">开启后，守护喵可以识别"假关闭按钮 / 清理加速 / 领奖励"这类诱导页面，并在你按下三次音量减时解除冻结。本服务不上传你的屏幕内容。</string>
+
+    <string name="btn_freeze">① 冻结屏幕（禁用触摸）</string>
+    <string name="btn_freeze_sub">临时生效 · 连按 3 次「音量减」恢复</string>
+    <string name="btn_backend">② 申请后端（ADB 授权）</string>
+    <string name="btn_backend_sub">需要电脑或用无线调试连一次</string>
+
+    <string name="notif_channel">守护喵 · 可疑页面告警</string>
+    <string name="notif_title">检测到可疑页面</string>
+    <string name="notif_text">疑似诱导退出 / 领奖励弹窗</string>
+    <string name="act_close">关闭当前 App</string>
+    <string name="act_freeze">冻结触摸</string>
+    <string name="act_home">返回桌面</string>
+    <string name="act_unfreeze">解除冻结</string>
+
+    <string name="overlay_hint">屏幕已冻结 · 连按 3 次「音量减」恢复</string>
+    <string name="overlay_unlock">立即解除</string>
+</resources>

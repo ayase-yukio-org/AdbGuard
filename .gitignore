@@ -1,0 +1,29 @@
+# ============================================================
+#  隐私文件 —— 绝不外传
+# ============================================================
+
+# 工作区内部记录（含设备序列号 / 内网 IP / 配对码 / 本机用户名）
+.workbuddy/
+
+# 真机采集数据：完整安装包列表、页面节点树、手机截图
+# （allpkgs.txt 含该机全部已安装应用，dump/截图含屏幕内容）
+dist/allpkgs.txt
+dist/*dump*.xml
+dist/*.png
+dist/*.jpg
+dist/*.jpeg
+
+# 本机环境专属（Android SDK 绝对路径）
+adbguard-android/local.properties
+
+# ============================================================
+#  构建产物
+# ============================================================
+adbguard-android/.gradle/
+adbguard-android/build/
+adbguard-android/app/build/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

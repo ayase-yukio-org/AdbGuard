@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  这里只申请"最小必要"的设备管理员策略：
+  - force-lock：允许锁屏（用户主动冻结时可选）
+  刻意不申请 wipe-data / reset-password 等危险策略。
+  Device Owner 模式下用 DevicePolicyManager 的 API 做隐藏/挂起，靠的是 DO 身份，
+  而不是这些 XML policy。
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <force-lock />
+    </uses-policies>
+</device-admin>

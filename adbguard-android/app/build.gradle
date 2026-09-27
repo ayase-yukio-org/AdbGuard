@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'top.adbguard'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "top.adbguard"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // 纯 Java + 系统 API，不引三方依赖，包体最小
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+
+    packaging {
+        resources {
+            excludes += ['META-INF/**', '**/*.proto']
+        }
+    }
+}
+
+dependencies {
+    // 刻意不引入 AndroidX / 三方库：
+    // 1) 老年机存储小，包越小越好
+    // 2) 避免 Jetifier / R8 额外坑
+}

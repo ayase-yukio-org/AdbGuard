@@ -1,0 +1,17 @@
+# 守护喵后端 —— 零第三方依赖
+#
+# 全部功能只用 Python 标准库实现（subprocess / http.server / socket / xml.etree）：
+#   - 不需要 pure-python-adb / adb-shell 之类的封装
+#   - 不需要 requests / flask
+#   - 不需要 colorama（颜色用 ANSI 转义，Windows Terminal / VSCode 终端正常显示）
+#
+# 唯一的外部依赖是系统上的 adb 可执行文件（Android Platform-Tools）：
+#   下载：https://developer.android.com/tools/releases/platform-tools
+#   或： winget install Google.PlatformTools
+#   或： choco install adb
+#
+# 如果 adb 不在 PATH 里，改 config.py 的 ADB_PATH 为绝对路径，例如：
+#   ADB_PATH = r"C:\platform-tools\adb.exe"
+#
+# Python 版本要求：3.8+（用到了 dataclass / walrus 之外的新语法很少）
+#   已验证：3.13

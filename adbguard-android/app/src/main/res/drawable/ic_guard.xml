@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 盾牌：守护 -->
+    <path
+        android:fillColor="#2F6FED"
+        android:pathData="M54,8 L94,25 V55 C94,78 76,94 54,101 C32,94 14,78 14,55 V25 Z" />
+
+    <!-- 内层浅色轮廓 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.18"
+        android:pathData="M54,16 L86,30 V55 C86,73 71,86 54,92 C37,86 22,73 22,55 V30 Z" />
+
+    <!-- 中心星：警惕 / 拦截 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 L61,46 L78,46 L64,56 L69,73 L54,63 L39,73 L44,56 L30,46 L47,46 Z" />
+</vector>
