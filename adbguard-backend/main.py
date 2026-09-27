@@ -13,6 +13,7 @@ main.py —— 守护喵后端命令行。
   python main.py disable com.xxx.yyy         让它冻结（图标消失、起不来）
   python main.py restore com.xxx.yyy         恢复
   python main.py promote                     把守护喵提升为 Device Owner
+  python main.py demote                      撤销 Device Owner（退回可卸载状态）
   python main.py serve                       起后端，等手机来连（HTTP + UDP 发现）
   python main.py connect 192.168.1.7:5555    无线调试连接
   python main.py pair 192.168.1.7:43211 123456   无线调试配对
@@ -277,6 +278,18 @@ def cmd_promote(args) -> int:
     print(dim("  提升后 APK 自己就能：隐藏/挂起流氓应用、直接撤销它的权限"))
     print()
     print("  " + remediate.promote_device_owner(adb, args.component))
+    print()
+    print(dim("  想撤销？ python main.py demote"))
+    return 0
+
+
+def cmd_demote(args) -> int:
+    adb = pick_adb(args)
+    banner()
+    print("  正在撤销守护喵的 Device Owner 身份…")
+    print(dim("  撤销后 APK 退回普通应用，可以在系统设置里正常卸载"))
+    print()
+    print("  " + remediate.demote_device_owner(adb, args.component))
     return 0
 
 
@@ -397,6 +410,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("promote", help="把守护喵提升为 Device Owner")
     sp.add_argument("--component", default="top.adbguard/.GuardDeviceAdminReceiver")
     sp.set_defaults(func=cmd_promote)
+
+    sp = sub.add_parser("demote", help="撤销 Device Owner（退回可卸载状态）")
+    sp.add_argument("--component", default="top.adbguard/.GuardDeviceAdminReceiver")
+    sp.set_defaults(func=cmd_demote)
 
     sp = sub.add_parser("serve", help="起后端，等手机连（HTTP + UDP 发现）")
     sp.add_argument("--port", type=int, default=config.HTTP_PORT)

@@ -23,11 +23,22 @@
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="tiramisu" />
 
+    <!--
+        android:testOnly="true" —— 这是"逃生舱"，不要删。
+
+        Device Owner 一旦设定，会变成不可卸载、不可停用；而 `dpm` 的官方帮助写明：
+        remove-active-admin 只对 **声明了 testOnly 的 admin** 生效。
+        不加这一行，一旦提权后想退出，就只剩「恢复出厂设置」一条路。
+
+        代价：安装时必须带 -t，即 `adb install -t -r xxx.apk`
+        （Android Studio 直接 Run 会自动加，不用管）。
+    -->
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_guard"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:testOnly="true"
         android:theme="@style/AppTheme"
         tools:targetApi="34">
 

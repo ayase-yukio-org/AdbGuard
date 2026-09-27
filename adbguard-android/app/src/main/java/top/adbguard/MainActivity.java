@@ -2,6 +2,7 @@ package top.adbguard;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -389,7 +390,7 @@ public class MainActivity extends Activity {
         btnFreeze.setBackgroundColor(frozen ? 0xFFD0453E : 0xFF2F6FED);
 
         boolean owner = DeviceOwnerGuard.isOwner(this);
-        btnBackend.setText(owner ? "② 后端已接入（Device Owner）" : getString(R.string.btn_backend));
+        btnBackend.setText(owner ? "② 已接入 Device Owner · 点此撤销" : getString(R.string.btn_backend));
         btnBackend.setBackgroundColor(owner ? 0xFF0D7A3C : 0xFF12A150);
     }
 
@@ -471,8 +472,11 @@ public class MainActivity extends Activity {
             h.postDelayed(this::refreshMain, 400);
         });
 
-        // ② 申请后端（ADB）
-        btnBackend.setOnClickListener(v -> requestBackend());
+        // ② 申请后端（ADB）—— 若已经是 Device Owner，这个按钮变成"撤销身份"入口
+        btnBackend.setOnClickListener(v -> {
+            if (DeviceOwnerGuard.isOwner(this)) askReleaseOwnership();
+            else requestBackend();
+        });
 
         btnCloseCurrent.setOnClickListener(v -> {
             GuardAccessibilityService a = GuardAccessibilityService.get();
@@ -532,6 +536,39 @@ public class MainActivity extends Activity {
                 toast(msg);
             }));
         });
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  撤销 Device Owner —— 逃生舱                                          */
+    /* ------------------------------------------------------------------ */
+
+    /**
+     * 二次确认后主动放弃 Device Owner 身份。
+     *
+     * 必须是"用户明确点两次"的动作：撤销后 APK 会退回普通应用，
+     * 失去挂起 / 隐藏 / 撤权限这三项能力，但换来"可以正常卸载"。
+     */
+    private void askReleaseOwnership() {
+        new AlertDialog.Builder(this)
+                .setTitle("撤销 Device Owner？")
+                .setMessage("撤销后守护喵会退回普通应用：\n\n"
+                        + "· 失去「挂起 / 隐藏别的应用 / 撤销对方权限」这三项能力\n"
+                        + "· 好处 —— 终于能在系统设置里正常卸载它了\n\n"
+                        + "确定要继续吗？")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确认撤销", (dlg, w) -> {
+                    boolean ok = DeviceOwnerGuard.releaseOwnership(this);
+                    if (ok) {
+                        log("已撤销 Device Owner，可正常卸载。adb 兜底命令："
+                                + DeviceOwnerGuard.demoteCommand(this));
+                        toast("已撤销，现在可以正常卸载了");
+                    } else {
+                        log("撤销未生效：当前可能不是 Device Owner");
+                        toast("撤销失败，详见日志");
+                    }
+                    refreshMain();
+                })
+                .show();
     }
 
     /* ------------------------------------------------------------------ */

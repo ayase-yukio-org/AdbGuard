@@ -76,6 +76,54 @@ public final class DeviceOwnerGuard {
                 + ctx.getPackageName() + "/.GuardDeviceAdminReceiver";
     }
 
+    /**
+     * 主动放弃 Device Owner 身份 + 撤销设备管理员。
+     *
+     * 为什么必须由 App 自己来调：
+     *   Device Owner 是"粘性"的。`dpm` 的官方帮助写明 remove-active-admin
+     *   只对**声明了 testOnly 的 admin** 生效；普通手段（系统设置里、纯 adb）
+     *   都拔不掉。唯一可靠的正路就是 App 内调用本方法，把自己降回普通应用 ——
+     *   之后才能在设置里正常卸载。
+     *
+     * @return true 表示至少完成了一步（DO 身份已放弃 或 管理员已撤销）
+     */
+    public static boolean releaseOwnership(Context ctx) {
+        DevicePolicyManager d = dpm(ctx);
+        if (d == null) return false;
+        boolean ok = false;
+
+        // ① 放弃 Device Owner 身份
+        //    （clearDeviceOwnerApp 自 API 26 起标记废弃，但至今仍是唯一可行路径）
+        try {
+            if (d.isDeviceOwnerApp(ctx.getPackageName())) {
+                d.clearDeviceOwnerApp(ctx.getPackageName());
+                ok = true;
+                Log.i(TAG, "已放弃 Device Owner 身份");
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "clearDeviceOwnerApp 异常: " + t);
+        }
+
+        // ② 撤销设备管理员，否则设置里仍显示"已激活"
+        try {
+            if (d.isAdminActive(admin(ctx))) {
+                d.removeActiveAdmin(admin(ctx));
+                ok = true;
+                Log.i(TAG, "已撤销设备管理员");
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "removeActiveAdmin 异常: " + t);
+        }
+
+        return ok;
+    }
+
+    /** 退出 Device Owner 时给用户/后端看的命令（需本 APK 声明 testOnly 才有效）。 */
+    public static String demoteCommand(Context ctx) {
+        return "adb shell dpm remove-active-admin "
+                + ctx.getPackageName() + "/.GuardDeviceAdminReceiver";
+    }
+
     /* ------------------------------------------------------------------ */
     /*  核心：隔离一个流氓 App                                              */
     /* ------------------------------------------------------------------ */

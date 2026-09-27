@@ -1,5 +1,9 @@
 # 守护喵 · AdbGuard
 
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-3ddc84.svg)]()
+[![minSdk](https://img.shields.io/badge/minSdk-24-orange.svg)]()
+
 > 专治伪装成「手机清理 / 优化大师」的流氓应用 —— 给爸妈手机用的一套防线。
 > 由一个 Android APK（前端守护）+ 一个 Python/ADB 后端（清剿工具）组成。
 
@@ -138,37 +142,45 @@ winget install Google.PlatformTools
 
 ### 1. 装 APK
 
-**本机已验证可以直接编译**（Gradle wrapper 已就位，不用再 `gradle wrapper`）：
+先在 `adbguard-android/local.properties` 里写好你的 SDK 路径（该文件不入库）：
+
+```properties
+sdk.dir=/your/path/to/Android/Sdk
+```
+
+**Gradle wrapper 已就位**，克隆下来直接编译，不用再跑 `gradle wrapper`：
 
 ```bash
 cd adbguard-android
-./build-apk.sh                                     # ← 推荐：自动走 G 盘，避开 C 盘爆满
+./build-apk.sh                                     # 推荐：可把 Gradle 缓存挪出系统盘
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-> `build-apk.sh` 会把 `GRADLE_USER_HOME` / `TEMP` / `TMPDIR` 全部指到 G 盘。
-> **原因**：本机 C 盘已 100% 占满，而 Gradle 默认写入 `C:\Users\<你>\.gradle`，
-> 直接 `./gradlew` 会报 `No space left on device`。脚本等价于：
+> **关于 `build-apk.sh`**：它支持把 Gradle 的缓存与临时目录指到**非系统盘**，
+> 适合 C 盘空间紧张的情况。脚本顶部三个变量按需改，等价于：
 
 ```bash
-export GRADLE_USER_HOME="G:/gradle-home"
-export TEMP="G:/build-tmp" TMP="G:/build-tmp" TMPDIR="G:/build-tmp"
+export GRADLE_USER_HOME="/path/to/gradle-home"     # Gradle 缓存（默认写系统盘）
+export TEMP="D:/build-tmp" TMP="D:/build-tmp" TMPDIR="D:/build-tmp"
 ./gradlew :app:assembleDebug
 ```
 
-**本机工具链（已实测跑通）：**
+> Windows 上 JVM 读的是 `TEMP` / `TMP`，**不读 `TMPDIR`**（那是 Linux 的规矩），
+> 所以三个都要设。不设而系统盘又满时，症状就是 `No space left on device`。
 
-| 组件 | 版本 / 位置 |
+**工具链要求（已实测跑通的组合）：**
+
+| 组件 | 版本 |
 |---|---|
 | Android Gradle Plugin | 8.13.0 |
 | Gradle | 9.1.0（wrapper 自带） |
-| JDK | 21（`G:\jdk21`） |
-| Android SDK | `G:\2345679's SDK`（见 `local.properties`） |
-| 构建产物 | `app/build/outputs/apk/debug/app-debug.apk`（约 57 KB） |
+| JDK | 21 |
+| Android SDK | compileSdk 36 |
+| 构建产物 | `app/build/outputs/apk/debug/app-debug.apk`（约 97 KB） |
 
 > 项目**不依赖 AndroidX / 任何三方库**，纯系统 API。minSdk 24 / targetSdk 34 / compileSdk 36。
-> 也可在 Android Studio 里 "Open an existing project" 指向 `adbguard-android/`（需把
-> Settings → Build Tools → Gradle → Gradle user home 同样改到 G 盘）。
+> 也可在 Android Studio 里 "Open an existing project" 指向 `adbguard-android/`
+> （Gradle JDK 选 21；Gradle user home 按需改到非系统盘）。
 
 ### 2. 走引导（APK 内）
 
@@ -216,8 +228,42 @@ python main.py promote
 ```
 
 成功之后 APK 自己就获得了隐藏/挂起流氓应用的能力，
-主面板的按钮会变成「② 后端已接入（Device Owner）」。
+主面板的按钮会变成「② 已接入 Device Owner · 点此撤销」。
 > 失败多半是因为手机上还登着账号，或已有别的 Device Owner。
+
+#### 怎么退出 Device Owner（重要，先读这段）
+
+**Device Owner 是"粘性"的** —— 一旦设定，App 会变成不可卸载、不可停用，
+而普通手段拔不掉。`dpm` 的官方帮助写得很明白：
+
+> `dpm remove-active-admin`: Disables an active admin, **the admin must have
+> declared `android:testOnly` in the application in its manifest.**
+> This will also remove device and profile owners.
+
+所以本项目**已经声明了 `android:testOnly="true"` 作为逃生舱**。退出有三条路：
+
+| # | 方式 | 说明 |
+|---|---|---|
+| ① | **APK 内点一下**（推荐） | 守护喵主面板 →「② 已接入 Device Owner · 点此撤销」→ 二次确认。内部调 `clearDeviceOwnerApp()`，是 Android **唯一可靠**的降权方式 |
+| ② | `python main.py demote` | 等价于 `adb shell dpm remove-active-admin top.adbguard/.GuardDeviceAdminReceiver`，靠的就是上一段提到的 testOnly 声明 |
+| ③ | 恢复出厂设置 | 前两条都失效时的终极手段，**正常用不到** |
+
+> ⚠️ 因为声明了 `testOnly`，安装时**必须带 `-t`**：
+> ```bash
+> adb install -t -r app/build/outputs/apk/debug/app-debug.apk
+> ```
+> 忘带会报 `INSTALL_FAILED_TEST_ONLY`。Android Studio 直接 Run 会自动加，不用管。
+
+#### Device Owner 会影响日常使用吗？
+
+| 问题 | 答案 |
+|---|---|
+| 会锁机吗？ | **不会**。本项目**没有**用 `lockTask` / Kiosk 模式，不限制你正常用手机 |
+| 会动我的数据吗？ | **不会**。`device_admin.xml` 只申请 `force-lock`，刻意**不**申请 `wipe-data` / `reset-password` |
+| 多出什么能力？ | 仅一项：能挂起 / 隐藏流氓应用、撤销它的权限 |
+| 有什么不便？ | 提权期间**守护喵自己不能直接卸载**，要先按上面步骤撤销 |
+
+> 换句话说：这是个"**功能解锁**"，不是"**把手机交出去**"。不想要时点一下就退。
 
 ---
 
@@ -235,6 +281,7 @@ python main.py promote
 | `kill <pkg>` | 只 force-stop |
 | `revoke-overlay` | 一键撤销**所有**第三方应用的悬浮窗权限（专治"弹窗关不掉"） |
 | `promote` | 把守护喵提升为 Device Owner |
+| `demote` | **撤销** Device Owner，让守护喵退回可卸载状态（靠 manifest 里的 `testOnly`）|
 | `serve [--port N]` | 起 HTTP(8720) + UDP 发现(8721)，等手机连 |
 
 ### 体检的 7 个信号
@@ -308,3 +355,17 @@ adbguard-backend/                      Python 后端（零第三方依赖）
 - 后端不会主动连外部网络，只监听局域网 8720/8721。
 - APK 刻意**不**申请 `wipe-data` / `reset-password` 等危险设备策略。
 - 自动点击只点「强行停止 / 停用」，**永不自动点「卸载」**。
+
+---
+
+## 十、许可证
+
+**GNU General Public License v3.0** —— 全文见 [LICENSE](LICENSE)。
+
+```
+守护喵 AdbGuard
+Copyright (C) 2026 ciallo0721-cmd / Ayase Yukio
+```
+
+你可以自由使用、修改、分发，**但衍生作品必须以同样的许可证开源**。
+简单说：欢迎拿去用、拿去改，但别包一层壳做成闭源捞钱的工具。

@@ -228,6 +228,29 @@ def promote_device_owner(adb, component: str = "top.adbguard/.GuardDeviceAdminRe
     return f"✗ 提升失败：{out.strip()}{hint}"
 
 
+def demote_device_owner(adb, component: str = "top.adbguard/.GuardDeviceAdminReceiver") -> str:
+    """
+    撤销守护喵的 Device Owner 身份。
+
+    前提：本 APK 的 manifest 里已声明 android:testOnly="true"。
+    `dpm` 的官方帮助写明 remove-active-admin 只对声明了 testOnly 的 admin 生效；
+    没有那一行就只能靠 APK 内的 clearDeviceOwnerApp()，或恢复出厂设置。
+    """
+    out = adb.remove_active_admin(component)
+    if "success" in out.lower():
+        return f"✓ 已撤销 Device Owner：{component}\n  现在可以在系统设置里正常卸载守护喵了"
+
+    hint = (
+        "\n  若提示 non-test admin / not removable：\n"
+        "   1. 确认当前 APK 版本声明了 android:testOnly=\"true\"（v1.0 起已加）\n"
+        "   2. 仍失败就走正路 —— 打开守护喵 → 主面板 →\n"
+        "      「② 已接入 Device Owner · 点此撤销」，\n"
+        "      那里调用 clearDeviceOwnerApp()，是 Android 唯一可靠的降权方式\n"
+        "   3. 都无效时只剩「恢复出厂设置」（这是 Android 的防赖着不走设计）"
+    )
+    return f"✗ 撤销失败：{out.strip()}{hint}"
+
+
 def make_kiosk_list(adb, pkgs: List[str]) -> str:
     """
     给"只允许这些应用"的场景生成锁定任务白名单（需要 Device Owner）。
