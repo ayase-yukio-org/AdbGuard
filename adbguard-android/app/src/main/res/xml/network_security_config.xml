@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ██ 明文 HTTP 放行配置 —— 删了它就连不上后端 ██
+
+    ▍问题现象
+    targetSdk >= 28（Android 9）起，系统把 usesCleartextTraffic 默认值改成 false，
+    于是任何 http:// 请求都会被网络栈直接拦掉，抛：
+
+        CLEARTEXT communication to 192.168.x.x not permitted by network security policy
+
+    TCP 能连上、UDP 自动发现也正常，偏偏 HTTP 一步就死，极容易误判成
+    「后端没起」或「IP 填错了」。
+
+    ▍为什么本项目必须放行
+    守护喵的后端是用户在**自己电脑**上跑的局域网服务：
+        手机 ── http://<电脑内网IP>:8720/api/... ──▶ Python 后端
+    它没有（也不需要）TLS 证书，为一张内网自签证书引入 keystore 与
+    证书固定，成本远大于收益。所以显式放行明文是正确取舍。
+
+    ▍为什么用 networkSecurityConfig，而不是
+       android:usesCleartextTraffic="true"
+    两者效果接近（后者更省事），但本方式：
+      · 策略集中在一个文件里，可审计、可收紧
+      · 将来若要限制到特定网段或域名，只改这里，不动 manifest
+      · 语义更明确（"允许明文" 是显式声明的策略，而非默认值回退）
+
+    ▍安全边界
+    本文件只作用于「守护喵」这一个应用自己的网络栈，
+    不改变系统全局策略，也不影响其它任何 App。
+    放行目标是用户自己填写的、同一局域网内的后端地址。
+    应用本身不会主动访问任何外部网络（见 README「安全与隐私」）。
+
+    注意：Android 的 domain 元素不支持通配符 IP（写不了 192.168.*），
+    而后端 IP 由用户填写、随时会变，因此这里只能整体放行明文。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
