@@ -15,3 +15,19 @@
 #
 # Python 版本要求：3.8+（用到了 dataclass / walrus 之外的新语法很少）
 #   已验证：3.13
+
+# ----------------------------------------------------------------------
+# 图形界面（可选）
+# ----------------------------------------------------------------------
+# 命令行后端本身零依赖。只有 gui.py（可视化控制台）需要两个包：
+#
+#   python -m venv .venv
+#   .venv/Scripts/python -m pip install customtkinter pillow
+#   .venv/Scripts/python gui.py
+#
+# · customtkinter 6.x 起把 Pillow 改成了可选依赖，而「抓屏」功能要用它，
+#   所以显式装上，别指望它被自动带进来。
+# · 建议装进 venv：若系统 Python 是 Microsoft Store 版，site-packages 位于
+#   受保护的 C:\Program Files\WindowsApps，根本写不进去。
+# · pip 若报 WinError 32 / 下载中断，把临时目录也挪出系统盘：
+#     TEMP=G:/pip-tmp TMP=G:/pip-tmp python -m pip install ...

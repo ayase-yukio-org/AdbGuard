@@ -16,6 +16,12 @@ dist/*.jpeg
 # 本机环境专属（Android SDK 绝对路径）
 adbguard-android/local.properties
 
+# GUI 虚拟环境（customtkinter 装在这里，不进仓库）
+adbguard-backend/.venv/
+
+# 抓屏临时文件 —— 里面是手机实时画面，绝不外传
+adbguard-backend/_screen.png
+
 # ============================================================
 #  构建产物
 # ============================================================

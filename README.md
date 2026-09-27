@@ -220,6 +220,29 @@ python main.py serve                   # 起后端，等手机连（HTTP + UDP �
 手机端「② 申请后端」→「自动发现」——UDP 广播一句就能自动填好电脑 IP，
 不用让爸妈手输地址。
 
+#### 图形界面（可选，不想敲命令就用它）
+
+`gui.py` 就是上面这些命令的窗口版 —— 同一个后端，同一套打分逻辑，只是不用记参数：
+
+```bash
+cd adbguard-backend
+python -m venv .venv
+.venv/Scripts/python -m pip install customtkinter pillow   # 只有界面需要这两个
+.venv/Scripts/python gui.py
+```
+
+两个页签：
+
+| 页签 | 内容 |
+|---|---|
+| **应用管理** | 左侧列出第三方应用（可搜索，可按「高危 / 有悬浮窗 / 有设备管理员 / 无启动图标」筛）；右侧是详情：版本、安装来源、首装时间、是否悬浮窗 / 无障碍 / 设备管理员 / Device Owner，以及**已授予权限逐条列出、危险项标红**。选中后可直接强杀 / 冻解 / 解管理员 / 撤权限 / 拔刺 / 卸载 |
+| **屏幕 / 设备** | 实时抓屏（可勾选每 2 秒自动刷新）+ 机型 / Android 版本 / SDK / root / 当前前台应用，并能一键「关掉它」 |
+
+- **多选 = 批量处置**，处置顺序仍走 `remediate.quarantine`，界面不重造那套逻辑
+- 所有 ADB 调用都在后台线程跑，界面不会卡死
+- 依赖装在 `adbguard-backend/.venv/`，不污染系统 Python；抓屏临时文件 `_screen.png` 已排除在 `.gitignore` 外
+- 自检：`.venv/Scripts/python gui.py --selftest`（无需真机，验证列表渲染 / 筛选 / 详情解析）
+
 ### 4. 提权（可选，但很值）
 
 ```bash
@@ -268,6 +291,8 @@ python main.py promote
 ---
 
 ## 六、后端命令一览
+
+> 不想敲命令？`python gui.py` 是同能力集的可视化控制台，见「五、3. 图形界面」。
 
 | 命令 | 干什么 |
 |---|---|
@@ -321,7 +346,7 @@ adbguard-android/                      Android APK（纯 Java，无三方依赖�
 ├── app/src/main/res/xml/device_admin.xml
 └── app/src/main/res/layout/activity_main.xml
 
-adbguard-backend/                      Python 后端（零第三方依赖）
+adbguard-backend/                      Python 后端（CLI 零三方依赖；GUI 需 customtkinter）
 ├── config.py          阈值 / 关键词表 / 权限表
 ├── adbutil.py         ADB 封装（含多路兜底拿前台包名）
 ├── layout_probe.py    uiautomator XML → 节点列表
@@ -330,6 +355,7 @@ adbguard-backend/                      Python 后端（零第三方依赖）
 ├── remediate.py       处置动作（拔刺组合拳）
 ├── server.py          HTTP API + UDP 自动发现
 ├── main.py            CLI
+├── gui.py             可视化控制台（customtkinter，唯一用到三方包的模块）
 └── selftest.py        打分逻辑自检（无需真机）
 ```
 
